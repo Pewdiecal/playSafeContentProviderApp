@@ -11,7 +11,9 @@ import SwiftUI
 struct PlaySafeContentProviderAppApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            LoginView()
         }
     }
 }
+
+let apiBaseUrl: String = "http://192.168.1.214:8000"
