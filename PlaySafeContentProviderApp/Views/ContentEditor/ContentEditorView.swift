@@ -7,6 +7,11 @@ struct ContentEditorView: View {
     @State private var contentDescription = ""
     @State private var availableRegion: CountryCode = .MY
     @State private var genre: Genre = .kpop
+    @State private var premiumRes: StreamingResolution = .fullHD_1080
+    @State private var standardRes: StreamingResolution = .HD_720
+    @State private var basicRes: StreamingResolution = .SD_480
+    @State private var budgetRes: StreamingResolution = .SD_360
+    @State private var premiumTrialRes: StreamingResolution = .fullHD_1080
     @State private var encryptMedia = true
     @State private var isLoading = false
     @State private var progressAmount = 0.0
@@ -45,6 +50,51 @@ struct ContentEditorView: View {
                     Text("Relaxing").tag(Genre.relaxing)
                     Text("Sci-Fi").tag(Genre.sci_fi)
                     Text("Drama").tag(Genre.drama)
+                }
+
+                Picker(selection: $premiumRes, label: Text("Premium resolution")) {
+                    Text("1080p Full HD").tag(StreamingResolution.fullHD_1080)
+                    Text("720p HD").tag(StreamingResolution.HD_720)
+                    Text("480p SD").tag(StreamingResolution.SD_480)
+                    Text("360p SD").tag(StreamingResolution.SD_360)
+                    Text("240p SD").tag(StreamingResolution.SD_240)
+                    Text("144p SD").tag(StreamingResolution.SD_144)
+                }
+
+                Picker(selection: $standardRes, label: Text("Standard resolution")) {
+                    Text("1080p Full HD").tag(StreamingResolution.fullHD_1080)
+                    Text("720p HD").tag(StreamingResolution.HD_720)
+                    Text("480p SD").tag(StreamingResolution.SD_480)
+                    Text("360p SD").tag(StreamingResolution.SD_360)
+                    Text("240p SD").tag(StreamingResolution.SD_240)
+                    Text("144p SD").tag(StreamingResolution.SD_144)
+                }
+
+                Picker(selection: $basicRes, label: Text("Basic resolution")) {
+                    Text("1080p Full HD").tag(StreamingResolution.fullHD_1080)
+                    Text("720p HD").tag(StreamingResolution.HD_720)
+                    Text("480p SD").tag(StreamingResolution.SD_480)
+                    Text("360p SD").tag(StreamingResolution.SD_360)
+                    Text("240p SD").tag(StreamingResolution.SD_240)
+                    Text("144p SD").tag(StreamingResolution.SD_144)
+                }
+
+                Picker(selection: $budgetRes, label: Text("Budget resolution")) {
+                    Text("1080p Full HD").tag(StreamingResolution.fullHD_1080)
+                    Text("720p HD").tag(StreamingResolution.HD_720)
+                    Text("480p SD").tag(StreamingResolution.SD_480)
+                    Text("360p SD").tag(StreamingResolution.SD_360)
+                    Text("240p SD").tag(StreamingResolution.SD_240)
+                    Text("144p SD").tag(StreamingResolution.SD_144)
+                }
+
+                Picker(selection: $premiumTrialRes, label: Text("Premium Trial resolution")) {
+                    Text("1080p Full HD").tag(StreamingResolution.fullHD_1080)
+                    Text("720p HD").tag(StreamingResolution.HD_720)
+                    Text("480p SD").tag(StreamingResolution.SD_480)
+                    Text("360p SD").tag(StreamingResolution.SD_360)
+                    Text("240p SD").tag(StreamingResolution.SD_240)
+                    Text("144p SD").tag(StreamingResolution.SD_144)
                 }
 
                 Toggle("Enable encryption", isOn: $encryptMedia)
