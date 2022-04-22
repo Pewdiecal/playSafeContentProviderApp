@@ -5,19 +5,19 @@ struct ContentEditorView: View {
     @State private var rawMediaFile = ""
     @State private var coverArtFile = ""
     @State private var contentDescription = ""
-    @State private var availableRegion: CountryCode = .MY
-    @State private var genre: Genre = .kpop
-    @State private var premiumRes: StreamingResolution = .fullHD_1080
-    @State private var standardRes: StreamingResolution = .HD_720
-    @State private var basicRes: StreamingResolution = .SD_480
-    @State private var budgetRes: StreamingResolution = .SD_360
-    @State private var premiumTrialRes: StreamingResolution = .fullHD_1080
+    @State private var availableRegion: CountryCode
+    @State private var genre: Genre
+    @State private var premiumRes: StreamingResolution
+    @State private var standardRes: StreamingResolution
+    @State private var basicRes: StreamingResolution
+    @State private var budgetRes: StreamingResolution
+    @State private var premiumTrialRes: StreamingResolution
     @State private var encryptMedia = true
     @State private var isLoading = false
     @State private var progressAmount = 0.0
     @State private var showProgress = false
     @State private var showAlert = false
-    @State private var showDeleteProgress = false
+    @State private var showCircularProgress = false
     @State private var progressText = ""
     @StateObject private var viewModel: ContentEditorViewModel
     @Environment(\.dismiss) var dismiss
@@ -26,6 +26,13 @@ struct ContentEditorView: View {
     init(mediaContent: MediaContent? = nil, networkRequestService: NetworkRequestService) {
         self._viewModel = StateObject(wrappedValue: ContentEditorViewModel(mediaContent: mediaContent,
                                                                            networkRequestService: networkRequestService))
+        self._availableRegion = State(initialValue: mediaContent?.availableRegions ?? .MY)
+        self._genre = State(initialValue: mediaContent?.genre ?? .kpop)
+        self._premiumRes = State(initialValue: mediaContent?.maxQualityPremium ?? .fullHD_1080)
+        self._standardRes = State(initialValue: mediaContent?.maxQualityStandard ?? .HD_720)
+        self._basicRes = State(initialValue: mediaContent?.maxQualityBasic ?? .SD_480)
+        self._budgetRes = State(initialValue: mediaContent?.maxQualityBudget ?? .SD_144)
+        self._premiumTrialRes = State(initialValue: mediaContent?.maxQualityPremiumTrial ?? .fullHD_1080)
     }
 
     var body: some View {
@@ -34,7 +41,7 @@ struct ContentEditorView: View {
                 TextField("Content Name", text: $contentName)
                 TextField("Content Description", text: $contentDescription)
 
-                Picker(selection: $availableRegion, label: Text("Select region")) {
+                Picker(selection: $availableRegion, label: Text("Select available streaming region")) {
                     Text("Malaysia").tag(CountryCode.MY)
                     Text("South Korea").tag(CountryCode.KR)
                     Text("Japan").tag(CountryCode.JP)
@@ -97,71 +104,97 @@ struct ContentEditorView: View {
                     Text("144p SD").tag(StreamingResolution.SD_144)
                 }
 
-                Toggle("Enable encryption", isOn: $encryptMedia)
-                    .toggleStyle(.checkbox)
-            }
-            HStack {
-                Text("Upload Media File: ")
-                Text(rawMediaFile)
-                    .frame(width: 200)
-                Button("Choose File") {
-                    let dialog = NSOpenPanel();
-                    dialog.title = "Choose a media file";
-                    dialog.showsResizeIndicator = true;
-                    dialog.showsHiddenFiles = false;
-                    dialog.allowsMultipleSelection = false;
-                    dialog.canChooseDirectories = false;
-                    dialog.allowedFileTypes = ["mp4", "mov"];
-
-                    if (dialog.runModal() ==  NSApplication.ModalResponse.OK) {
-                        let result = dialog.url // Pathname of the file
-
-                        if (result != nil) {
-                            rawMediaFile = result!.pathComponents.last!
-                        }
-
-                    } else {
-                        // User clicked on "Cancel"
-                        return
-                    }
+                if viewModel.mediaContent == nil {
+                    Toggle("Enable encryption", isOn: $encryptMedia)
+                        .toggleStyle(.checkbox)
                 }
             }
-            .padding(.bottom, 0)
 
-            HStack {
-                Text("Upload Cover Art File: ")
-                Text(coverArtFile)
-                    .frame(width: 200)
-                Button("Choose File") {
-                    let dialog = NSOpenPanel();
-                    dialog.title = "Choose an image";
-                    dialog.showsResizeIndicator = true;
-                    dialog.showsHiddenFiles = false;
-                    dialog.allowsMultipleSelection = false;
-                    dialog.canChooseDirectories = false;
-                    dialog.allowedFileTypes = ["png", "jpg", "jpeg"];
+            if viewModel.mediaContent == nil {
+                HStack {
+                    Text("Upload Media File: ")
+                    Text(rawMediaFile)
+                        .frame(width: 200)
+                    Button("Choose File") {
+                        let dialog = NSOpenPanel();
+                        dialog.title = "Choose a media file";
+                        dialog.showsResizeIndicator = true;
+                        dialog.showsHiddenFiles = false;
+                        dialog.allowsMultipleSelection = false;
+                        dialog.canChooseDirectories = false;
+                        dialog.allowedFileTypes = ["mp4", "mov"];
 
-                    if (dialog.runModal() ==  NSApplication.ModalResponse.OK) {
-                        let result = dialog.url // Pathname of the file
+                        if (dialog.runModal() ==  NSApplication.ModalResponse.OK) {
+                            let result = dialog.url // Pathname of the file
 
-                        if (result != nil) {
-                            coverArtFile = result!.pathComponents.last!
+                            if (result != nil) {
+                                rawMediaFile = result!.pathComponents.last!
+                            }
+
+                        } else {
+                            // User clicked on "Cancel"
+                            return
                         }
-                    } else {
-                        // User clicked on "Cancel"
-                        return
                     }
                 }
+                .padding(.bottom, 0)
+
+                HStack {
+                    Text("Upload Cover Art File: ")
+                    Text(coverArtFile)
+                        .frame(width: 200)
+                    Button("Choose File") {
+                        let dialog = NSOpenPanel();
+                        dialog.title = "Choose an image";
+                        dialog.showsResizeIndicator = true;
+                        dialog.showsHiddenFiles = false;
+                        dialog.allowsMultipleSelection = false;
+                        dialog.canChooseDirectories = false;
+                        dialog.allowedFileTypes = ["png", "jpg", "jpeg"];
+
+                        if (dialog.runModal() ==  NSApplication.ModalResponse.OK) {
+                            let result = dialog.url // Pathname of the file
+
+                            if (result != nil) {
+                                coverArtFile = result!.pathComponents.last!
+                            }
+                        } else {
+                            // User clicked on "Cancel"
+                            return
+                        }
+                    }
+                }
+                .padding()
             }
-            .padding()
 
             HStack {
                 Button("Confirm") {
-                    if contentName == "" || rawMediaFile == "" || coverArtFile == "" || contentDescription == "" {
+                    if (contentName == "" || rawMediaFile == "" || coverArtFile == "" || contentDescription == "")
+                        && viewModel.mediaContent == nil {
                         showAlert = true
                     } else {
-                        showProgress.toggle()
-                        progressText = "Uploading to server please wait..."
+                        if var content = viewModel.mediaContent {
+                            if contentName != "" || contentDescription != "" {
+                                content.contentName = self.contentName
+                                content.contentDescription = self.contentDescription
+                                content.availableRegions = self.availableRegion
+                                content.maxQualityPremium = self.premiumRes
+                                content.maxQualityStandard = self.standardRes
+                                content.maxQualityBasic = self.basicRes
+                                content.maxQualityBudget = self.budgetRes
+                                content.maxQualityPremiumTrial = self.premiumTrialRes
+                                content.genre = self.genre
+                                viewModel.mediaContent = content
+                                progressText = "Updating data..."
+                                showCircularProgress.toggle()
+                                viewModel.editContentMetadata()
+                            } else {
+                                showAlert = true
+                            }
+                        } else {
+                            progressText = "Uploading to server please wait..."
+                            showProgress.toggle()
+                        }
                     }
                 }
 
@@ -172,7 +205,7 @@ struct ContentEditorView: View {
                 if viewModel.mediaContent != nil {
                     Button("Delete content from server", role: .destructive) {
                         progressText = "Deleting content from server...."
-                        showDeleteProgress.toggle()
+                        showCircularProgress.toggle()
                         viewModel.deleteContentFromServer()
                     }
                 }
@@ -198,12 +231,12 @@ struct ContentEditorView: View {
         }
         .alert(viewModel.errorMessage ?? "", isPresented: $viewModel.showingAlert) {
             Button("OK", role: .cancel) {
-                showDeleteProgress = false
+                showCircularProgress = false
             }
         }
         .onReceive(viewModel.$isSuccess, perform: { isSuccess in
             if isSuccess {
-                showDeleteProgress.toggle()
+                showCircularProgress.toggle()
                 dismiss()
             }
         })
@@ -212,7 +245,7 @@ struct ContentEditorView: View {
             .background(Color.black)
             .cornerRadius(10)
             .shadow(radius: 10)
-            .opacity(showDeleteProgress ? 1 : 0))
+            .opacity(showCircularProgress ? 1 : 0))
         .overlay(ProgressView(progressText, value: progressAmount, total: 200)
             .padding()
             .background(Color.black)

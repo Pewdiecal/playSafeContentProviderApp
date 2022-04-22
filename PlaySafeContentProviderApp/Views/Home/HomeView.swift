@@ -7,8 +7,8 @@ struct HomeView: View {
     @StateObject var homeViewModel: HomeViewModel
     @State private var isLoading = false
     @State private var showLogin = false
-    @State private var showEditSheet = false
     @State private var showNewSheet = false
+    @State private var mediaContent: MediaContent?
 
     init(networkRequestService: NetworkRequestService) {
         self.networkRequestService = networkRequestService
@@ -27,15 +27,12 @@ struct HomeView: View {
                 ScrollView {
                     LazyHGrid(rows: rows,
                               spacing: 10) {
-                        ForEach(homeViewModel.mediaContents, id: \.self) { mediaContent in
+                        ForEach(homeViewModel.mediaContents, id: \.self) { content in
                             Button {
-                                showEditSheet.toggle()
+                                self.mediaContent = content
                             } label: {
-                                MediaCatalogueCellView(imageUrl: "\(apiBaseUrl)\(mediaContent.contentCovertArtUrl!)",
-                                                       title: mediaContent.contentName!, genre: mediaContent.genre!.rawValue)
-                            }
-                            .sheet(isPresented: $showEditSheet) {
-                                ContentEditorView(mediaContent: mediaContent, networkRequestService: networkRequestService)
+                                MediaCatalogueCellView(imageUrl: "\(apiBaseUrl)\(content.contentCovertArtUrl!)",
+                                                       title: content.contentName!, genre: content.genre!.rawValue)
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
@@ -51,6 +48,9 @@ struct HomeView: View {
                     showLogin.toggle()
                 }
                 isLoading = false
+            }
+            .sheet(item: $mediaContent) { content in
+                ContentEditorView(mediaContent: content, networkRequestService: networkRequestService)
             }
             .onAppear(perform: homeViewModel.fetchAllMediaContent)
             .navigationTitle("Home")
