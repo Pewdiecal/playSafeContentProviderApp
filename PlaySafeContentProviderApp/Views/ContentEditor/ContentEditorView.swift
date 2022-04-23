@@ -20,10 +20,11 @@ struct ContentEditorView: View {
     @State private var showCircularProgress = false
     @State private var progressText = ""
     @StateObject private var viewModel: ContentEditorViewModel
+    @Binding var action: SheetAction
     @Environment(\.dismiss) var dismiss
     let progressCount = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
 
-    init(mediaContent: MediaContent? = nil, networkRequestService: NetworkRequestService) {
+    init(mediaContent: MediaContent? = nil, networkRequestService: NetworkRequestService, action: Binding<SheetAction>) {
         self._viewModel = StateObject(wrappedValue: ContentEditorViewModel(mediaContent: mediaContent,
                                                                            networkRequestService: networkRequestService))
         self._availableRegion = State(initialValue: mediaContent?.availableRegions ?? .MY)
@@ -33,6 +34,7 @@ struct ContentEditorView: View {
         self._basicRes = State(initialValue: mediaContent?.maxQualityBasic ?? .SD_480)
         self._budgetRes = State(initialValue: mediaContent?.maxQualityBudget ?? .SD_144)
         self._premiumTrialRes = State(initialValue: mediaContent?.maxQualityPremiumTrial ?? .fullHD_1080)
+        self._action = action
     }
 
     var body: some View {
@@ -194,11 +196,13 @@ struct ContentEditorView: View {
                         } else {
                             progressText = "Uploading to server please wait..."
                             showProgress.toggle()
+                            self.action = .confirm
                         }
                     }
                 }
 
                 Button("Cancel") {
+                    self.action = .cancel
                     dismiss()
                 }
 
@@ -207,6 +211,7 @@ struct ContentEditorView: View {
                         progressText = "Deleting content from server...."
                         showCircularProgress.toggle()
                         viewModel.deleteContentFromServer()
+                        self.action = .confirm
                     }
                 }
             }
@@ -242,13 +247,13 @@ struct ContentEditorView: View {
         })
         .overlay(ProgressView(progressText)
             .padding()
-            .background(Color.black)
+            .background(Color.white)
             .cornerRadius(10)
             .shadow(radius: 10)
             .opacity(showCircularProgress ? 1 : 0))
         .overlay(ProgressView(progressText, value: progressAmount, total: 200)
             .padding()
-            .background(Color.black)
+            .background(Color.white)
             .cornerRadius(10)
             .shadow(radius: 10)
             .opacity(showProgress ? 1 : 0)

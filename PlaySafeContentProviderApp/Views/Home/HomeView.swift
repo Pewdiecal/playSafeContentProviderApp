@@ -2,6 +2,12 @@ import SwiftUI
 import AVFoundation
 import AVKit
 
+enum SheetAction {
+    case cancel
+    case confirm
+    case nothing
+}
+
 struct HomeView: View {
     var networkRequestService: NetworkRequestService
     @StateObject var homeViewModel: HomeViewModel
@@ -9,6 +15,7 @@ struct HomeView: View {
     @State private var showLogin = false
     @State private var showNewSheet = false
     @State private var mediaContent: MediaContent?
+    @State private var sheetAction: SheetAction = SheetAction.nothing
 
     init(networkRequestService: NetworkRequestService) {
         self.networkRequestService = networkRequestService
@@ -19,14 +26,15 @@ struct HomeView: View {
         GridItem(.flexible(minimum: 300), spacing: 16)
         ]
 
+    var columns: [GridItem] = Array(repeating: .init(.flexible()), count: 3)
+
     var body: some View {
         if showLogin {
             LoginView()
         } else {
             VStack {
                 ScrollView {
-                    LazyHGrid(rows: rows,
-                              spacing: 10) {
+                    LazyVGrid(columns: columns) {
                         ForEach(homeViewModel.mediaContents, id: \.self) { content in
                             Button {
                                 self.mediaContent = content
@@ -37,9 +45,8 @@ struct HomeView: View {
                             .buttonStyle(PlainButtonStyle())
                         }
                     }
-                    .padding(.leading, 12)
+                    .padding(10)
                 }
-                .padding(.leading, 10)
                 Spacer()
             }
             .frame(width: 800, height: 700)
@@ -49,8 +56,12 @@ struct HomeView: View {
                 }
                 isLoading = false
             }
-            .sheet(item: $mediaContent) { content in
-                ContentEditorView(mediaContent: content, networkRequestService: networkRequestService)
+            .sheet(item: $mediaContent, onDismiss: {
+                if sheetAction != .cancel {
+                    homeViewModel.fetchAllMediaContent()
+                }
+            }) { content in
+                ContentEditorView(mediaContent: content, networkRequestService: networkRequestService, action: $sheetAction)
             }
             .onAppear(perform: homeViewModel.fetchAllMediaContent)
             .navigationTitle("Home")
@@ -59,7 +70,7 @@ struct HomeView: View {
                     showNewSheet.toggle()
                 }
                 .sheet(isPresented: $showNewSheet) {
-                    ContentEditorView(networkRequestService: networkRequestService)
+                    ContentEditorView(networkRequestService: networkRequestService, action: $sheetAction)
                 }
                 Button("Logout") {
                     isLoading = true
@@ -71,7 +82,7 @@ struct HomeView: View {
             }
             .overlay(ProgressView("Logging out ...")
                 .padding()
-                .background(Color.black)
+                .background(Color.white)
                 .cornerRadius(10)
                 .shadow(radius: 10)
                 .opacity(isLoading ? 1 : 0))

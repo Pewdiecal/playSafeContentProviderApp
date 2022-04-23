@@ -73,7 +73,7 @@ struct RegisterAcccountView: View {
             }
             .overlay(ProgressView("Registering account ...")
                 .padding()
-                .background(Color.black)
+                .background(Color.white)
                 .cornerRadius(10)
                 .shadow(radius: 10)
                 .opacity(isLoading ? 1 : 0))
