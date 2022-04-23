@@ -31,7 +31,7 @@ class HomeViewModel: ObservableObject {
                 guard let strongSelf = self else {
                     return
                 }
-
+                strongSelf.fetchSucess = true
                 strongSelf.mediaContents = mediaContents
             }
             .store(in: &cancelleble)
@@ -63,4 +63,5 @@ class HomeViewModel: ObservableObject {
     @Published var mediaContents: [MediaContent] = []
     @Published var showingAlert = false
     @Published var logoutSuccess = false
+    @Published var fetchSucess = false
 }

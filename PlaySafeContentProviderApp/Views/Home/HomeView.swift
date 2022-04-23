@@ -16,6 +16,7 @@ struct HomeView: View {
     @State private var showNewSheet = false
     @State private var mediaContent: MediaContent?
     @State private var sheetAction: SheetAction = SheetAction.nothing
+    @State private var loadingMsg = ""
 
     init(networkRequestService: NetworkRequestService) {
         self.networkRequestService = networkRequestService
@@ -53,17 +54,28 @@ struct HomeView: View {
             .onReceive(homeViewModel.$logoutSuccess) { isSuccess in
                 if isSuccess {
                     showLogin.toggle()
+                    isLoading = false
                 }
-                isLoading = false
             }
+            .onReceive(homeViewModel.$fetchSucess, perform: { isSuccess in
+                if isSuccess {
+                    isLoading = false
+                }
+            })
             .sheet(item: $mediaContent, onDismiss: {
                 if sheetAction != .cancel {
                     homeViewModel.fetchAllMediaContent()
+                    loadingMsg = "Updating content list..."
+                    isLoading = true
                 }
             }) { content in
                 ContentEditorView(mediaContent: content, networkRequestService: networkRequestService, action: $sheetAction)
             }
-            .onAppear(perform: homeViewModel.fetchAllMediaContent)
+            .onAppear(perform: {
+                homeViewModel.fetchAllMediaContent()
+                loadingMsg = "Fetching content list..."
+                isLoading = true
+            })
             .navigationTitle("Home")
             .toolbar {
                 Button("Add new content") {
@@ -73,14 +85,17 @@ struct HomeView: View {
                     ContentEditorView(networkRequestService: networkRequestService, action: $sheetAction)
                 }
                 Button("Logout") {
+                    loadingMsg = "Logging out..."
                     isLoading = true
                     homeViewModel.logout()
                 }
                 Button("Refresh") {
                     homeViewModel.fetchAllMediaContent()
+                    loadingMsg = "Fetching content list..."
+                    isLoading = true
                 }
             }
-            .overlay(ProgressView("Logging out ...")
+            .overlay(ProgressView(loadingMsg)
                 .padding()
                 .background(Color.white)
                 .cornerRadius(10)
