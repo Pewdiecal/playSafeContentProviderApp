@@ -19,6 +19,7 @@ struct ContentEditorView: View {
     @State private var showAlert = false
     @State private var showCircularProgress = false
     @State private var progressText = ""
+    @State private var isContentEncrypted = false
     @StateObject private var viewModel: ContentEditorViewModel
     @Binding var action: SheetAction
     @Environment(\.dismiss) var dismiss
@@ -35,6 +36,7 @@ struct ContentEditorView: View {
         self._budgetRes = State(initialValue: mediaContent?.maxQualityBudget ?? .SD_144)
         self._premiumTrialRes = State(initialValue: mediaContent?.maxQualityPremiumTrial ?? .fullHD_1080)
         self._action = action
+        self._isContentEncrypted = State(wrappedValue: mediaContent?.isContentEncrypted ?? false)
     }
 
     var body: some View {
@@ -213,6 +215,14 @@ struct ContentEditorView: View {
                         viewModel.deleteContentFromServer()
                         self.action = .confirm
                     }
+
+                    Button("Manual key rotation") {
+                        progressText = "Sending manual key rotation request..."
+                        showCircularProgress.toggle()
+                        viewModel.manualKeyRotation()
+                        self.action = .confirm
+                    }
+                    .disabled(!isContentEncrypted)
                 }
             }
             Spacer()

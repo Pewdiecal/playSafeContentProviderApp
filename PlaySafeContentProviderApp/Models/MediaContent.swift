@@ -13,6 +13,7 @@ struct MediaContent: Codable, Identifiable, Hashable {
     var maxQualityBasic: StreamingResolution
     var maxQualityBudget: StreamingResolution
     var maxQualityPremiumTrial: StreamingResolution
+    var isContentEncrypted: Bool
 
     init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
@@ -28,6 +29,7 @@ struct MediaContent: Codable, Identifiable, Hashable {
         self.maxQualityBasic = try values.decode(StreamingResolution.self, forKey: .maxQualityBasic)
         self.maxQualityBudget = try values.decode(StreamingResolution.self, forKey: .maxQualityBudget)
         self.maxQualityPremiumTrial = try values.decode(StreamingResolution.self, forKey: .maxQualityPremiumTrial)
+        self.isContentEncrypted = (try values.decodeIfPresent(Int.self, forKey: .isContentEncrypted) != nil)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -56,5 +58,6 @@ struct MediaContent: Codable, Identifiable, Hashable {
         case maxQualityBasic = "max_quality_basic"
         case maxQualityBudget = "max_quality_budget"
         case maxQualityPremiumTrial = "max_quality_premiumTrial"
+        case isContentEncrypted = "license_id"
     }
 }

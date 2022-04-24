@@ -80,6 +80,40 @@ class ContentEditorViewModel: ObservableObject {
         }
     }
 
+    func manualKeyRotation() {
+        if let id = mediaContent?.contentId {
+            networkRequestService.apiRequest(.post, "/api/media/rotateKey/\(id)",
+                                             requestBody: nil,
+                                             queryItems: nil)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                guard let strongSelf = self else {
+                    return
+                }
+                switch completion {
+                case .failure(let error):
+                    strongSelf.errorMessage = error.localizedDescription
+                    strongSelf.showingAlert = true
+                    trace("Key rotate error: \(error)")
+                case .finished:
+                    trace("Key rotate request sent Success")
+                }
+            } receiveValue: { [weak self] (data: Data, httpResponseCode: Int) in
+                guard let strongSelf = self else {
+                    return
+                }
+                if (200 ... 299).contains(httpResponseCode) {
+                    strongSelf.isSuccess = true
+                    trace("Key rotate request sent Success")
+                } else {
+                    strongSelf.errorMessage = "Alert: Bad response code \(httpResponseCode)."
+                    strongSelf.showingAlert = true
+                }
+            }
+            .store(in: &cancelleble)
+        }
+    }
+
     var mediaContent: MediaContent?
     var networkRequestService: NetworkRequestService
     @Published var errorMessage: String? = nil
